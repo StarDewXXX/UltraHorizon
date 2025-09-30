@@ -37,3 +37,5 @@ APP_CONFIG_PATH=OpenManus/config/config.toml WINDOW_SIZE=200 python parallel_run
 
 ---
 
+### GUI Version
+The GUI version of three environments are available under `gui_version`, allowing users to intuitively experience the design and long-horizon of our environment.
