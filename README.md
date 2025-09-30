@@ -4,6 +4,8 @@
 
 ---
 
+## Introduction 📖
+
 ![Benchmark Illustration](misc/main.png)
 
 Many real-world tasks are inherently long-horizon and partially observable. A robust agent should be capable of effectively handling such challenges. **UltraHorizon** is designed to investigate and evaluate agent performance in **ultra long-horizon scenarios**. In our study, the maximum number of tool calls reaches over 400, with trajectory lengths extending up to 200k steps. Unlike NIAH (Needle-in-a-Haystack) tasks, which primarily involve retrieving information over long contexts, our benchmark requires agents to **sustain operation within an environment**, encompassing long-horizon reasoning, planning, memory management, and tool usage. Our key findings are as follows:
@@ -16,7 +18,7 @@ Many real-world tasks are inherently long-horizon and partially observable. A ro
 
 ---
 
-### Running LLM Agents in Our Environment
+## Running LLM Agents in Our Environment 🧩
 
 1. Install the packages required by **OpenManus**.
 2. Configure your agent by setting the LLM parameters in `./OpenManus/config/config.toml`.
@@ -37,5 +39,12 @@ APP_CONFIG_PATH=OpenManus/config/config.toml WINDOW_SIZE=200 python parallel_run
 
 ---
 
-### GUI Version
-The GUI version of three environments are available under `gui_version`, allowing users to intuitively experience the design and long-horizon of our environment.
+## GUI Version 🎮
+The GUI version of three environments are available under `gui_version`, allowing users to intuitively experience the design and long-horizon of our environment (open the html file with browser).
+
+#### Mystery Grid
+![Gird Illustration](misc/grid-1.png)
+#### Sequence Explore
+![Seq Illustration](misc/seq-1.png)
+#### Alien Genetics Laboratory
+![Bio Illustration](misc/bio-1.png)
