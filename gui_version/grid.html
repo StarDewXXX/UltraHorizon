@@ -1,0 +1,954 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Exploration Game</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4a5568;
+            margin: 0 0 15px 0;
+            font-size: 2em;
+        }
+        
+        .game-info {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            color: white;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .rules {
+            background: #e6fffa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #38b2ac;
+            font-size: 13px;
+        }
+        
+        .rules h3 {
+            color: #2d3748;
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+        
+        .rules ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .rules li {
+            margin-bottom: 3px;
+        }
+        
+        .main-game-area {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+        
+        .grid-container {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+        
+        .grid-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 32px);
+            gap: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .cell {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e2e8f0;
+            background: white;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        
+        .cell.player {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            border-color: #c53030;
+            transform: scale(1.1);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+        
+        .cell.A { background: #ffeaa7; border-color: #fdcb6e; }
+        .cell.B { background: #fab1a0; border-color: #e17055; }
+        .cell.C { background: #a29bfe; border-color: #6c5ce7; }
+        .cell.D { background: #fd79a8; border-color: #e84393; }
+        .cell.E { background: #00b894; border-color: #00a085; color: white; }
+        .cell.X { background: #ddd; border-color: #bbb; color: #666; }
+        
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .status-panel {
+            background: #2d3748;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+        
+        .status-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            padding: 4px 0;
+            border-bottom: 1px solid #4a5568;
+            font-size: 13px;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 15px;
+            max-width: 200px;
+        }
+        
+        .direction-btn {
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+        
+        .direction-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .direction-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .up { background: #4299e1; color: white; grid-column: 2; }
+        .left { background: #48bb78; color: white; grid-column: 1; grid-row: 2; }
+        .down { background: #ed8936; color: white; grid-column: 2; grid-row: 2; }
+        .right { background: #9f7aea; color: white; grid-column: 3; grid-row: 2; }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .reset-btn {
+            background: #f56565;
+            color: white;
+        }
+        
+        .commit-btn {
+            background: #38a169;
+            color: white;
+        }
+        
+        .notes-btn {
+            background: #805ad5;
+            color: white;
+        }
+        
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .log {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 150px;
+            max-height: 200px;
+        }
+        
+        .notes-area {
+            margin-top: 15px;
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .notes-area h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        
+        .notes-area textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 12px;
+            resize: vertical;
+        }
+        
+        .commit-form {
+            display: none;
+            background: #f0fff4;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 2px solid #38a169;
+        }
+        
+        .commit-form h3 {
+            color: #2f855a;
+            margin: 0 0 15px 0;
+            font-size: 16px;
+        }
+        
+        .letter-input {
+            margin-bottom: 10px;
+        }
+        
+        .letter-input label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #2d3748;
+            font-size: 13px;
+        }
+        
+        .letter-input input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .progress-bar {
+            background: #e2e8f0;
+            height: 16px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #4299e1, #3182ce);
+            height: 100%;
+            transition: width 0.3s;
+            border-radius: 8px;
+        }
+        
+        .warning {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #f56565;
+            font-size: 13px;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #38a169;
+            font-size: 13px;
+        }
+        
+        .current-pos {
+            font-size: 13px;
+            color: #4a5568;
+            margin-top: 8px;
+        }
+        @media (max-width: 768px) {
+            .main-game-area {
+                flex-direction: column;
+            }
+            
+            .grid {
+                grid-template-columns: repeat(10, 28px);
+            }
+            
+            .cell {
+                width: 28px;
+                height: 28px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Grid Exploration Game</h1>
+        
+        <div class="game-info">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span style="font-size: 1.1em;">📊 Progress: </span>
+                    <span id="current-steps">0</span> / <span id="required-steps">50</span> steps
+                </div>
+                <div>
+                    <span>⚡ Energy: </span><span id="energy">20</span>
+                </div>
+                <div>
+                    <span>⭐ Score: </span><span id="score">0</span>
+                </div>
+                <div>
+                    <span>🔄 Remaining Resets: </span><span id="reset-count">20</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div class="rules">
+            <h3>🎯 Game Rules (Must Read)</h3>
+            <ul>
+                <li><strong>Objective</strong>: Explore the hidden effects of letters A-E in the grid, with only 50 steps total</li>
+                <li><strong>Movement</strong>: Each move consumes 1 energy point, maximum 30 moves per round</li>
+                <li><strong>Letters</strong>: Each letter has a unique hidden effect, stepped-on tiles become X (no effect)</li>
+                <li><strong>Exploration</strong>: Discover the true effect mechanisms of letters through multiple attempts, mechanisms may relate to position, energy, steps, etc.</li>
+                <li><strong>Submission</strong>: Must reach the required steps before submitting, only one submission allowed</li>
+                <li><strong>Reset</strong>: Can reset the game for new exploration (but total steps won't be reset), make full use of reset opportunities</li>
+            </ul>
+        </div>
+        
+        <div class="main-game-area">
+            <div class="grid-container">
+                <h3>🗺️ Game Map</h3>
+                <div class="grid" id="grid"></div>
+                <div class="current-pos">Current Position: <span id="current-pos">(0,0,A)</span></div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="status-panel">
+                    <h3>🎮 Control Panel</h3>
+                    
+                    <div class="controls">
+                        <button class="direction-btn up" onclick="movePlayer('up')">⬆️ Up</button>
+                        <button class="direction-btn left" onclick="movePlayer('left')">⬅️ Left</button>
+                        <button class="direction-btn down" onclick="movePlayer('down')">⬇️ Down</button>
+                        <button class="direction-btn right" onclick="movePlayer('right')">➡️ Right</button>
+                    </div>
+                    
+                    <div class="status-item">
+                        <span>Current Round Steps:</span>
+                        <span id="round-steps">0</span>
+                    </div>
+                    
+                    <div class="status-item">
+                        <span>Game Over:</span>
+                        <span id="game-over">No</span>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="action-btn reset-btn" onclick="resetGame()">🔄 Reset Game</button>
+                        <button class="action-btn commit-btn" id="commit-btn" onclick="showCommitForm()" disabled>📝 Submit Answer</button>
+                        <button class="action-btn notes-btn" onclick="toggleNotes()">📋 View Notes</button>
+                    </div>
+                </div>
+                
+                <div class="log" id="log"></div>
+            </div>
+        </div>
+        
+        <div class="notes-area" id="notes-area" style="display: none;">
+            <h3>📝 Exploration Notes</h3>
+            <textarea id="notes" placeholder="Record your findings and analysis here...&#10;&#10;Suggested content:&#10;- Observed effects of each letter&#10;- Performance differences in different situations&#10;- Possible trigger conditions&#10;- Hypotheses needing further verification"></textarea>
+        </div>
+        
+        <div class="commit-form" id="commit-form">
+            <h3>📋 Submit Final Answer</h3>
+            <p style="color: #2f855a; font-weight: bold;">Please describe the exact effect mechanism and trigger conditions for each letter:</p>
+            
+            <div class="letter-input">
+                <label for="effect-A">Effect of Letter A:</label>
+                <input type="text" id="effect-A" placeholder="Describe the exact effect and trigger conditions of letter A...">
+            </div>
+            
+            <div class="letter-input">
+                <label for="effect-B">Effect of Letter B:</label>
+                <input type="text" id="effect-B" placeholder="Describe the exact effect and trigger conditions of letter B...">
+            </div>
+            
+            <div class="letter-input">
+                <label for="effect-C">Effect of Letter C:</label>
+                <input type="text" id="effect-C" placeholder="Describe the exact effect and trigger conditions of letter C...">
+            </div>
+            
+            <div class="letter-input">
+                <label for="effect-D">Effect of Letter D:</label>
+                <input type="text" id="effect-D" placeholder="Describe the exact effect and trigger conditions of letter D...">
+            </div>
+            
+            <div class="letter-input">
+                <label for="effect-E">Effect of Letter E:</label>
+                <input type="text" id="effect-E" placeholder="Describe the exact effect and trigger conditions of letter E...">
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn commit-btn" onclick="commitAnswers()">✅ Confirm Submission</button>
+                <button class="action-btn" onclick="hideCommitForm()" style="background: #718096; color: white;">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Game state
+        let gameState = {
+            x: 0,
+            y: 0,
+            energy: 20,
+            score: 0,
+            steps: 0,
+            maxSteps: 30,
+            gameOver: false,
+            totalSteps: 0,
+            requiredSteps: 50,
+            resetCount: 0,
+            maxResets: 20,
+            committed: false,
+            visitedTiles: {},
+            visitedLetters: {}
+        };
+        
+        let grid = [];
+        let operationLog = [];
+        
+        // Difficulty and effects (hard difficulty)
+        const DIFFICULTY_EFFECTS = {
+            "A": "effect_6",  // Step count effect
+            "B": "effect_7",  // Corner and edge effects  
+            "C": "effect_8",  // Visit count based effect
+            "D": "effect_9",  // Energy management
+            "E": "effect_10"  // Complex position calculation
+        };
+        
+        // Initialize game
+        function initGame() {
+            generateGrid();
+            gameState.x = Math.floor(Math.random() * 10);
+            gameState.y = Math.floor(Math.random() * 10);
+            updateDisplay();
+            logOperation('init_game', {}, getGameStatus());
+            addLog('🎮 Game started! Explore the grid to discover the hidden patterns of letters!');
+        }
+        
+        function generateGrid() {
+            const letters = ['A', 'B', 'C', 'D', 'E'];
+            grid = [];
+            for (let i = 0; i < 10; i++) {
+                grid[i] = [];
+                for (let j = 0; j < 10; j++) {
+                    grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
+                }
+            }
+        }
+        
+        function movePlayer(direction) {
+            if (gameState.gameOver || gameState.committed) {
+                addLog('❌ Game is over, cannot move');
+                return;
+            }
+            
+            if (gameState.totalSteps >= gameState.requiredSteps) {
+                addLog('❌ Maximum total steps reached, please submit your answer');
+                return;
+            }
+            
+            const directions = {
+                'up': [0, 1],
+                'down': [0, -1], 
+                'left': [-1, 0],
+                'right': [1, 0]
+            };
+            
+            const [dx, dy] = directions[direction];
+            const newX = gameState.x + dx;
+            const newY = gameState.y + dy;
+            
+            if (newX < 0 || newX >= 10 || newY < 0 || newY >= 10) {
+                addLog('❌ Movement out of bounds');
+                logOperation('move', {direction: direction}, {success: false, message: 'Movement out of bounds'});
+                return;
+            }
+            
+            if (gameState.energy <= 0) {
+                addLog('❌ Insufficient energy');
+                logOperation('move', {direction: direction}, {success: false, message: 'Insufficient energy'});
+                return;
+            }
+            
+            // Execute move
+            gameState.x = newX;
+            gameState.y = newY;
+            gameState.energy -= 1;
+            gameState.steps += 1;
+            gameState.totalSteps += 1;
+            
+            // Track visits
+            const pos = `${newX},${newY}`;
+            gameState.visitedTiles[pos] = (gameState.visitedTiles[pos] || 0) + 1;
+            
+            const letter = grid[9 - newY][newX];
+            
+            if (letter !== 'X') {
+                gameState.visitedLetters[letter] = (gameState.visitedLetters[letter] || 0) + 1;
+                applyLetterEffect(letter);
+            }
+            
+            // Mark tile as visited
+            grid[9 - newY][newX] = 'X';
+            
+            if (gameState.energy <= 0 || gameState.steps >= gameState.maxSteps) {
+                gameState.gameOver = true;
+            }
+            
+            const result = {
+                success: true,
+                position: `(${newX},${newY},${letter})`,
+                energy: gameState.energy,
+                score: gameState.score,
+                steps: gameState.steps,
+                gameOver: gameState.gameOver
+            };
+            
+            logOperation('move', {direction: direction}, result);
+            updateDisplay();
+            
+            addLog(`🎯 Moved ${getDirectionName(direction)} to (${newX},${newY},${letter}) | Energy:${gameState.energy} Score:${gameState.score}`);
+        }
+        
+        function getDirectionName(direction) {
+            const names = {'up': 'Up', 'down': 'Down', 'left': 'Left', 'right': 'Right'};
+            return names[direction] || direction;
+        }
+        
+        function applyLetterEffect(letter) {
+            const effectName = DIFFICULTY_EFFECTS[letter];
+            
+            switch(effectName) {
+                case 'effect_6': // Step count effect
+                    if (gameState.steps % 3 === 0) {
+                        gameState.score += 2;
+                    } else {
+                        gameState.score -= 1;
+                    }
+                    break;
+                    
+                case 'effect_7': // Corner and edge effects
+                    const x = gameState.x, y = gameState.y;
+                    if (x <= 1 || x >= 8 || y <= 1 || y >= 8) {
+                        gameState.score += 3;
+                    }
+                    break;
+                    
+                case 'effect_8': // Visit count based effect
+                    const visitCount = gameState.visitedLetters[letter];
+                    if (visitCount % 2 === 1) {
+                        gameState.score += 1;
+                    }
+                    break;
+                    
+                case 'effect_9': // Energy management
+                    if (gameState.energy < 10) {
+                        gameState.score -= 2;
+                        gameState.energy += 10;
+                    } else {
+                        gameState.score += 1;
+                    }
+                    break;
+                    
+                case 'effect_10': // Complex position calculation
+                    gameState.score += (gameState.x - gameState.y);
+                    break;
+            }
+        }
+        
+        function resetGame() {
+            if (gameState.resetCount >= gameState.maxResets) {
+                addLog('❌ Maximum reset count reached');
+                return;
+            }
+            
+            gameState.resetCount += 1;
+            gameState.x = Math.floor(Math.random() * 10);
+            gameState.y = Math.floor(Math.random() * 10);
+            gameState.energy = 20;
+            gameState.score = 0;
+            gameState.steps = 0;
+            gameState.gameOver = false;
+            gameState.visitedTiles = {};
+            gameState.visitedLetters = {};
+            
+            generateGrid();
+            
+            const result = {
+                success: true,
+                message: `Environment reset. Reset count: ${gameState.resetCount}`,
+                initialPosition: `(${gameState.x},${gameState.y},${grid[9 - gameState.y][gameState.x]})`,
+                energy: gameState.energy
+            };
+            
+            logOperation('reset', {}, result);
+            updateDisplay();
+            
+            addLog(`🔄 Game reset (attempt ${gameState.resetCount}) | New position: (${gameState.x},${gameState.y})`);
+        }
+        
+        function showCommitForm() {
+            if (gameState.totalSteps < gameState.requiredSteps && gameState.resetCount < gameState.maxResets) {
+                addLog(`❌ Insufficient total steps, need ${gameState.requiredSteps} steps, currently ${gameState.totalSteps} steps`);
+                return;
+            }
+            
+            document.getElementById('commit-form').style.display = 'block';
+            document.getElementById('commit-form').scrollIntoView({behavior: 'smooth'});
+        }
+        
+        function hideCommitForm() {
+            document.getElementById('commit-form').style.display = 'none';
+        }
+        
+        function commitAnswers() {
+            const answers = {
+                A: document.getElementById('effect-A').value.trim(),
+                B: document.getElementById('effect-B').value.trim(),
+                C: document.getElementById('effect-C').value.trim(),
+                D: document.getElementById('effect-D').value.trim(),
+                E: document.getElementById('effect-E').value.trim()
+            };
+            
+            // Check if all fields are filled
+            for (let letter in answers) {
+                if (!answers[letter]) {
+                    alert(`Please fill in the effect description for letter ${letter}`);
+                    return;
+                }
+            }
+            
+            // Create final submission content
+            const submissionContent = Object.entries(answers)
+                .map(([letter, effect]) => `${letter}: ${effect}`)
+                .join('\n');
+            
+            gameState.committed = true;
+            
+            const result = {
+                success: true,
+                answers: answers,
+                submissionContent: submissionContent
+            };
+            
+            logOperation('commit_final_result', {content: submissionContent}, result);
+            
+            addLog('✅ Answer submitted! Preparing to download operation log...');
+            
+            // Show success message and download button
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.innerHTML = `
+                <h3>🎉 Submission Successful!</h3>
+                <p>Your answer has been recorded. Click the button below to download the operation log:</p>
+                <button class="action-btn commit-btn" onclick="downloadLog()">📥 Download Operation Log</button>
+                <p style="margin-top: 10px; font-size: 0.9em;">Please download this JSON file and send it to the collector</p>
+            `;
+            
+            document.getElementById('commit-form').appendChild(successDiv);
+            updateDisplay();
+        }
+        
+        function downloadLog() {
+            const logData = {
+                timestamp: new Date().toISOString(),
+                totalSteps: gameState.totalSteps,
+                resetCount: gameState.resetCount,
+                finalScore: gameState.score,
+                operations: operationLog
+            };
+            
+            const blob = new Blob([JSON.stringify(logData, null, 2)], {
+                type: 'application/json'
+            });
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mysterygridenvironment.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('📥 Operation log downloaded as mysterygridenvironment.json');
+        }
+        
+        function toggleNotes() {
+            const notesArea = document.getElementById('notes-area');
+            notesArea.style.display = notesArea.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function updateDisplay() {
+            // Update status
+            document.getElementById('current-steps').textContent = gameState.totalSteps;
+            document.getElementById('required-steps').textContent = gameState.requiredSteps;
+            document.getElementById('energy').textContent = gameState.energy;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('reset-count').textContent = gameState.maxResets - gameState.resetCount;
+            document.getElementById('round-steps').textContent = gameState.steps;
+            document.getElementById('game-over').textContent = gameState.gameOver ? 'Yes' : 'No';
+            document.getElementById('current-pos').textContent = `(${gameState.x},${gameState.y},${grid[9 - gameState.y][gameState.x]})`;
+            
+            // Update progress bar
+            const progress = Math.min((gameState.totalSteps / gameState.requiredSteps) * 100, 100);
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            
+            // Update grid
+            updateGrid();
+            
+            // Update buttons
+            const canMove = !gameState.gameOver && !gameState.committed && gameState.totalSteps < gameState.requiredSteps;
+            const directionButtons = document.querySelectorAll('.direction-btn');
+            directionButtons.forEach(btn => btn.disabled = !canMove);
+            
+            const canCommit = (gameState.totalSteps >= gameState.requiredSteps || gameState.resetCount >= gameState.maxResets) && !gameState.committed;
+            document.getElementById('commit-btn').disabled = !canCommit;
+        }
+        
+        function updateGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            
+            for (let y = 9; y >= 0; y--) {
+                for (let x = 0; x < 10; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    if (x === gameState.x && y === gameState.y) {
+                        cell.className += ' player';
+                        cell.textContent = '👤';
+                    } else {
+                        const letter = grid[9 - y][x];
+                        cell.className += ` ${letter}`;
+                        cell.textContent = letter;
+                    }
+                    
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+        
+        function logOperation(action, parameters, returnValue) {
+            const timestamp = new Date().toISOString();
+            const logEntry = {
+                timestamp: timestamp,
+                action: action + (Object.keys(parameters).length > 0 ? ` ${JSON.stringify(parameters)}` : ''),
+                return: returnValue,
+                current_status: getGameStatus()
+            };
+            
+            operationLog.push(logEntry);
+        }
+        
+        function getGameStatus() {
+            return {
+                position: [gameState.x, gameState.y],
+                energy: gameState.energy,
+                score: gameState.score,
+                steps: gameState.steps,
+                totalSteps: gameState.totalSteps,
+                gameOver: gameState.gameOver,
+                resetCount: gameState.resetCount,
+                committed: gameState.committed,
+                visitedTiles: Object.keys(gameState.visitedTiles).length,
+                visitedLetters: {...gameState.visitedLetters}
+            };
+        }
+        
+        function addLog(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // Keyboard controls
+        document.addEventListener('keydown', function(event) {
+            if (gameState.gameOver || gameState.committed) return;
+            
+            switch(event.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    event.preventDefault();
+                    movePlayer('up');
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    event.preventDefault();
+                    movePlayer('down');
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    event.preventDefault();
+                    movePlayer('left');
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    event.preventDefault();
+                    movePlayer('right');
+                    break;
+                case 'r':
+                case 'R':
+                    event.preventDefault();
+                    resetGame();
+                    break;
+            }
+        });
+        
+        // Note: localStorage functionality removed due to Claude.ai restrictions
+        function saveNotes() {
+            // Notes are saved in memory during the session
+            // In a real environment, this would save to localStorage
+        }
+        
+        function loadNotes() {
+            // In a real environment, this would load from localStorage
+        }
+        
+        // Auto-save notes (simplified)
+        document.getElementById('notes').addEventListener('input', saveNotes);
+        
+        // Initialize game on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initGame();
+            loadNotes();
+            
+            // Show initial help message
+            addLog('🎮 Welcome to Grid Exploration Game!');
+            addLog('📝 Use arrow keys or WASD to move, R key to reset game');
+            addLog('🎯 Explore the hidden effects of letters A-E, discover their trigger conditions');
+            addLog('📋 Use the notes function to record your findings and analysis');
+            addLog(`🚀 Need to complete ${gameState.requiredSteps} steps of exploration before submitting`);
+        });
+        
+        // Add visual feedback for energy and score changes
+        function showEffect(type, value, element) {
+            const effectDiv = document.createElement('div');
+            effectDiv.style.cssText = `
+                position: absolute;
+                z-index: 1000;
+                color: ${type === 'energy' ? '#4299e1' : '#38a169'};
+                font-weight: bold;
+                font-size: 16px;
+                pointer-events: none;
+                animation: fadeUpOut 2s ease-out forwards;
+            `;
+            effectDiv.textContent = `${value > 0 ? '+' : ''}${value}`;
+            
+            const rect = element.getBoundingClientRect();
+            effectDiv.style.left = rect.left + rect.width/2 + 'px';
+            effectDiv.style.top = rect.top - 10 + 'px';
+            
+            document.body.appendChild(effectDiv);
+            
+            setTimeout(() => {
+                if (effectDiv.parentNode) {
+                    effectDiv.parentNode.removeChild(effectDiv);
+                }
+            }, 2000);
+        }
+        
+        // Add CSS animation for effects
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeUpOut {
+                0% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(-30px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

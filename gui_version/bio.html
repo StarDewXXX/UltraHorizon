@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alien Organism Genetics Laboratory · Interactive Environment</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#121833; --card:#18224a; --muted:#93a0c7; --text:#e9edff; --accent:#6ea8fe; --accent2:#66e0a3; --danger:#ff6b6b; --warn:#fbbf24;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0a0f1e 0%,#0c1024 100%);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji"}
+    .container{display:grid;grid-template-columns:320px 1fr;gap:16px;max-width:1400px;margin:0 auto;padding:16px}
+    .sidebar{background:var(--panel);border:1px solid #243062;border-radius:16px;padding:16px;position:sticky;top:16px;height:calc(100vh - 32px);overflow:auto}
+    .main{display:flex;flex-direction:column;gap:16px}
+    .card{background:var(--card);border:1px solid #243062;border-radius:16px;padding:16px}
+    h1{font-size:22px;margin:0 0 12px}
+    h2{font-size:18px;margin:0 0 10px;color:#d7ddff}
+    h3{font-size:16px;margin:16px 0 8px;color:#d7ddff}
+    p,li,small{color:var(--muted)}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#1f2a57;border:1px solid #2a3873;color:#cfe0ff;font-size:12px}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .grid{display:grid;gap:12px}
+    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    label{font-size:12px;color:#a9b7e7}
+    input,select,textarea{width:100%;background:#0f1530;color:var(--text);border:1px solid #263364;border-radius:10px;padding:10px;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+    textarea{min-height:160px;resize:vertical}
+    button{appearance:none;border:0;background:var(--accent);color:#0b1020;border-radius:12px;padding:10px 14px;font-weight:600;cursor:pointer}
+    button.secondary{background:#2a376e;color:#dfe7ff}
+    button.ghost{background:transparent;border:1px solid #33407a;color:#cfe0ff}
+    button.warn{background:var(--warn);color:#121212}
+    button.danger{background:var(--danger);color:#121212}
+    .progress{height:10px;background:#0e1430;border:1px solid #263364;border-radius:999px;overflow:hidden}
+    .progress>span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tabs button{background:#1a2652;color:#cfe0ff}
+    .tabs button.active{background:var(--accent);color:#0b1020}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .pill{padding:6px 10px;border-radius:999px;background:#1a244d;border:1px solid #2a3873;color:#cfe0ff;font-size:12px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px}
+    .kbd{border:1px solid #44518b;border-bottom-width:3px;border-radius:8px;background:#0c1333;color:#cfe0ff;padding:2px 6px;font-size:12px}
+    .muted{color:#9fb0de}
+    .footer-note{font-size:12px;color:#9fb0de}
+    .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+    .status-item{background:#11183a;border:1px solid #243062;padding:10px;border-radius:10px}
+    .status-item b{display:block;color:#e9edff}
+    .log{max-height:240px;overflow:auto;background:#0f1530;border:1px solid #22305f;border-radius:12px;padding:8px}
+    .log .line{padding:4px 0;border-bottom:1px dashed #263364}
+    .log .line:last-child{border-bottom:0}
+    .org-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+    .org{background:#11183a;border:1px solid #243062;border-radius:12px;padding:12px}
+    .org h4{margin:0 0 6px;font-size:14px}
+    .inline{display:inline-flex;gap:6px;align-items:center}
+    .muted-hr{border:none;border-top:1px dashed #31407b;margin:10px 0}
+    .callout{background:#0d1738;border:1px solid #2a3873;border-radius:12px;padding:10px}
+    .right{margin-left:auto}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Left: Status & Instructions -->
+    <aside class="sidebar" id="sidebar">
+      <h1>Alien Organism Genetics Laboratory</h1>
+      <div class="callout">
+        <p><b>Goal:</b> Explore genetic patterns through experiments and submit a formal experimental report after reaching the required number of steps.</p>
+        <ul>
+          <li>Each <b>cross</b> counts as 1 step; queries/removals do not count.</li>
+          <li>You can submit the report only after reaching the minimum number of experimental steps.</li>
+          <li>Explanatory text will not reveal answers, please discover the mechanisms through experiments.</li>
+        </ul>
+      </div>
+      <h3>Experiment Progress</h3>
+      <div class="status-grid">
+        <div class="status-item"><b id="reqSteps">Required Steps</b><span id="reqStepsVal" class="muted">-</span></div>
+        <div class="status-item"><b id="curSteps">Current Steps</b><span id="curStepsVal" class="muted">0</span></div>
+        <div class="status-item"><b>Remaining Steps</b><span id="remainStepsVal" class="muted">-</span></div>
+        <div class="status-item"><b>Can Submit</b><span id="canCommitVal" class="muted">No</span></div>
+        <div class="status-item"><b>Total Organisms</b><span id="orgCountVal" class="muted">-</span></div>
+        <div class="status-item"><b>Experiment Log Entries</b><span id="expLogVal" class="muted">0</span></div>
+      </div>
+      <div class="progress" style="margin-top:10px" aria-label="Progress bar"><span id="progressBar"></span></div>
+      <h3 style="margin-top:16px">Quick Tips</h3>
+      <div class="list">
+        <div class="pill">Perform cross → Generate offspring → Observe phenotypes → Summarize patterns</div>
+        <div class="pill">Query ID range → Review lineage and phenotypes</div>
+        <div class="pill">Only when reaching required steps → Submit final report</div>
+      </div>
+      <h3 style="margin-top:16px">Operation Log (Recent)</h3>
+      <div class="log" id="miniLog"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="secondary" id="btnDownload" title="Download experiment log JSON (available after submission)" disabled>Download Experiment Log JSON</button>
+        <button class="ghost right" id="btnReset">Reset Environment</button>
+      </div>
+      <p class="footer-note" style="margin-top:8px">The downloaded file is named <span class="mono" id="fileNameHint">alien_organism_genetics_laboratory.json</span>.<br/>Please download this JSON file and send it to the collector.</p>
+    </aside>
+    <!-- Right: Main Interaction Area -->
+    <main class="main">
+      <section class="card">
+        <div class="tabs" role="tablist">
+          <button class="active" data-tab="overview" aria-selected="true">Lab Overview</button>
+          <button data-tab="cross">Perform Cross</button>
+          <button data-tab="query">Query Organism</button>
+          <button data-tab="remove">Remove Organism</button>
+          <button data-tab="commit">Submit Final Report</button>
+        </div>
+      </section>
+      <section class="card" id="tab-overview" role="tabpanel">
+        <h2>Lab Overview</h2>
+        <div class="row" style="margin-bottom:8px">
+          <span class="badge">Environment Name: Alien Organism Genetics Laboratory</span>
+          <span class="badge">Version: Browser UI</span>
+          <span class="badge">Language: English Interface</span>
+        </div>
+        <p>Below are representative individuals of the initial 3 strains (A, B, C). You can switch to "Perform Cross" to conduct experiments, or search any ID range in "Query Organism".</p>
+        <div id="overviewOrgs" class="org-cards"></div>
+      </section>
+      <section class="card" id="tab-cross" role="tabpanel" hidden>
+        <h2>Perform Cross</h2>
+        <div class="grid cols-3">
+          <div>
+            <label for="selP1">Parent 1 (ID)</label>
+            <select id="selP1"></select>
+          </div>
+          <div>
+            <label for="selP2">Parent 2 (ID)</label>
+            <select id="selP2"></select>
+          </div>
+          <div>
+            <label for="offspringCount">Number of Offspring (1-100)</label>
+            <input id="offspringCount" type="number" min="1" max="100" value="10" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="btnCross">Execute Cross (+1 Step)</button>
+          <button class="ghost" id="btnStatus">Check Current Status</button>
+        </div>
+        <div id="crossResult" style="margin-top:12px"></div>
+      </section>
+      <section class="card" id="tab-query" role="tabpanel" hidden>
+        <h2>Query Organism</h2>
+        <div class="grid cols-3">
+          <div>
+            <label for="qStart">Start ID</label>
+            <input id="qStart" type="number" min="1" value="1" />
+          </div>
+          <div>
+            <label for="qEnd">End ID</label>
+            <input id="qEnd" type="number" min="1" value="3" />
+          </div>
+          <div style="align-self:end">
+            <button id="btnQuery">Search</button>
+          </div>
+        </div>
+        <div id="queryResult" style="margin-top:12px"></div>
+      </section>
+      <section class="card" id="tab-remove" role="tabpanel" hidden>
+        <h2>Remove Organism (by Range)</h2>
+        <p>Enter start and end IDs to remove all individuals within that <b>closed interval</b> (does not count as a step).</p>
+        <div class="grid cols-3">
+          <div>
+            <label for="rmStart">Start ID</label>
+            <input id="rmStart" type="number" min="1" value="1" />
+          </div>
+          <div>
+            <label for="rmEnd">End ID</label>
+            <input id="rmEnd" type="number" min="1" value="3" />
+          </div>
+          <div style="align-self:end">
+            <button class="danger" id="btnRemove">Remove Range</button>
+          </div>
+        </div>
+        <div id="removeResult" style="margin-top:12px"></div>
+      </section>
+
+      <section class="card" id="tab-commit" role="tabpanel" hidden>
+        <h2>Submit Final Report</h2>
+        <p class="muted">You can only submit after reaching the required steps. Please strictly follow the "Report Writing Guidelines" below the page.</p>
+        <div class="grid cols-1">
+          <div>
+            <label for="finalText">Report Content</label>
+            <textarea id="finalText" placeholder="Please write a complete experimental report (Chinese/English both acceptable)."></textarea>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="btnCommit" title="Available after reaching required steps" disabled>Submit Report</button>
+          <button class="secondary" id="btnPreview">Preview JSON (No Download)</button>
+        </div>
+        <div id="commitResult" style="margin-top:12px"></div>
+        <hr class="muted-hr" />
+        <h3>Report Writing Guidelines (Format hints only, no answers revealed)</h3>
+        <ol>
+          <li><b>Genetic Basis:</b> Describe the chromosome sets, gamete production methods (whether special segregation exists).</li>
+          <li><b>Genetic Rules for Each Trait:</b> Explain the number of alleles and their effects, dominance/recessive/dosage effects and possible interactions.</li>
+          <li><b>Lethal Combinations and Special Cases:</b> List discovered lethal genotypes/non-viable combinations and explain their causes and any conditional results.</li>
+        </ol>
+      </section>
+    </main>
+  </div>
+  <script>
+  /******************** Tool: Seeded Random Number ********************/
+  class RNG {
+    constructor(seed=42){this.seed=seed>>>0}
+    next(){ // xorshift32
+      let x=this.seed
+      x^=x<<13; x^=x>>>17; x^=x<<5; this.seed=x>>>0
+      return (this.seed/0xFFFFFFFF)
+    }
+  }
+  /******************** Environment Implementation (aligned with given Python logic) ********************/
+  class GeneticsLabEnvironment {
+    constructor({seed=42, required_steps=50, max_organisms=200}={}){
+      this.rng = new RNG(seed);
+      this.seed = seed;
+      this.required_steps = required_steps;
+      this.current_experiments = 0;
+      this.max_organisms = max_organisms;
+      this.genes = ['body_size','color','shell_shape'];
+      this.alleles = {
+        body_size:['S1','S2','S3'],
+        color:['C1','C2','C3'],
+        shell_shape:['H1','H2','H3']
+      };
+      this.meiosis_rule = 'unequal_segregation';
+      this.expression_rules = {
+        body_size:{ type:'dosage_effect', rule:{
+          'S1':{size_value:200, description:'large'},
+          'S2':{size_value:50, description:'medium'},
+          'S3':{size_value:10, description:'small'}
+        }},
+        color:{ type:'dominance_hierarchy', rule:['C1','C2','C3'], phenotypes:{
+          'C1':{color:'red', intensity:95},
+          'C2':{color:'blue', intensity:60},
+          'C3':{color:'white', intensity:20}
+        }},
+        shell_shape:{ type:'cyclic_interaction_lethal', lethal_combination:true, rule:{
+          'H1':{beats:'H2', loses_to:'H3'},
+          'H2':{beats:'H3', loses_to:'H1'},
+          'H3':{beats:'H1', loses_to:'H2'}
+        }, shell_shapes:{
+          'H1':{shape:'spiky', hardness:100},
+          'H2':{shape:'smooth', hardness:100},
+          'H3':{shape:'ridged', hardness:100}
+        }}
+      };
+      this.organisms = {}; this.next_id = 1; this.experiment_log = []; this.committed=false; this.final_result=null;
+      this._current_generation = 0; this._current_parents = null;
+      this._initialize_lab_stock();
+    }
+    noisy(value, level=0.05){ const n = value*level*(this.rng.next()-0.5)*2; return Math.max(0, Math.round((value+n)*100)/100); }
+    _initialize_lab_stock(){
+      const initial = [
+        { genotype:{ body_size:['S1','S1','S2'], color:['C1','C1','C1'], shell_shape:['H1','H1','H1'] }, desc:'Initial Strain A' },
+        { genotype:{ body_size:['S1','S2','S2'], color:['C2','C2','C2'], shell_shape:['H2','H2','H2'] }, desc:'Initial Strain B' },
+        { genotype:{ body_size:['S3','S3','S3'], color:['C3','C3','C3'], shell_shape:['H3','H3','H3'] }, desc:'Initial Strain C' }
+      ];
+      initial.forEach(org=>this._create_organism(org.genotype, org.desc));
+    }
+    _create_organism(genotype, description=''){
+      if(Object.keys(this.organisms).length>=this.max_organisms) throw new Error('Laboratory capacity full');
+      const id=this.next_id++;
+      const phenotype=this._calculate_phenotype(genotype);
+      this.organisms[id]={ id, genotype, phenotype, generation:this._current_generation||0, parents:this._current_parents, description, viable:true };
+      return id;
+    }
+    _is_viable_genotype(genotype){
+      const set = new Set(genotype['shell_shape']);
+      return set.size < 3; // All three alleles present → lethal
+    }
+    _calculate_phenotype(genotype){
+      const out={};
+      // Body size (dosage effect)
+      const sizeRule=this.expression_rules.body_size.rule;
+      const sum = genotype.body_size.reduce((a,al)=>a+sizeRule[al].size_value,0);
+      const total=this.noisy(sum,0.01);
+      let sizeCat='tiny';
+      if(total>=250) sizeCat='extra_large'; else if(total>=180) sizeCat='large'; else if(total>=100) sizeCat='medium'; else if(total>=50) sizeCat='small';
+      out.body_size=sizeCat; out.size_score=total;
+      // Color (dominance hierarchy)
+      const hier=this.expression_rules.color.rule; const ph=this.expression_rules.color.phenotypes;
+      let color='colorless', intensity=0;
+      for(const d of hier){ if(genotype.color.includes(d)){ color=ph[d].color; intensity=ph[d].intensity; break; } }
+      out.body_color=color; out.color_intensity=intensity;
+      // Shell shape (cyclic dominance)
+      const rule=this.expression_rules.shell_shape.rule; const shapes=this.expression_rules.shell_shape.shell_shapes;
+      const counts=genotype.shell_shape.reduce((m,a)=>(m[a]=(m[a]||0)+1,m),{});
+      const uniq=[...new Set(genotype.shell_shape)];
+      if(uniq.length===3){ out.shell_shape='deformed'; out.shell_hardness=0; }
+      else if(uniq.length===1){ const a=uniq[0]; out.shell_shape=shapes[a].shape; out.shell_hardness=this.noisy(shapes[a].hardness,0.05); }
+      else{
+        // Two alleles → winner + hardness adjusted by proportion
+        let winner=null; const [a,b]=uniq;
+        if(rule[a].beats===b) winner=a; else if(rule[b].beats===a) winner=b; else winner=a; // fallback
+        const ratio=(counts[winner]||1)/3.0; const base=shapes[winner].hardness; const hard=Math.max(1, Math.round(base*ratio));
+        out.shell_shape=shapes[winner].shape; out.shell_hardness=this.noisy(hard,0.05);
+      }
+      return out;
+    }
+    _generate_gametes(genotype){
+      // Triploid meiosis: 1+2 unequal segregation; independent for each gene
+      const gametes=[{},{ }];
+      for(const gene of this.genes){
+        const alleles=[...genotype[gene]]; // three
+        const assigns=[0,1,1]; // 0→gamete1, 1→gamete2
+        // Shuffle
+        for(let i=assigns.length-1;i>0;i--){ const j=Math.floor(this.rng.next()*(i+1)); [assigns[i],assigns[j]]=[assigns[j],assigns[i]]; }
+        const g1=[], g2=[];
+        for(let i=0;i<3;i++){ (assigns[i]===0?g1:g2).push(alleles[i]); }
+        gametes[0][gene]=g1; gametes[1][gene]=g2;
+      }
+      return gametes;
+    }
+    async conduct_cross(parent1_id, parent2_id, num_offspring=10){
+      if(this.committed) return {success:false,message:'Experiment submitted, cannot continue'};
+      if(this.current_experiments>=this.required_steps) return {success:false,message:`Maximum experimental steps reached (${this.required_steps})`};
+      if(!this.organisms[parent1_id]||!this.organisms[parent2_id]) return {success:false,message:'Parents do not exist'};
+      if(num_offspring<1||num_offspring>100) return {success:false,message:'Number of offspring must be between 1-100'};
+      if(Object.keys(this.organisms).length + num_offspring > this.max_organisms) return {success:false,message:'Exceeds laboratory capacity, please remove some individuals first'};
+      const p1=this.organisms[parent1_id], p2=this.organisms[parent2_id];
+      const offspring_data=[]; let lethal_count=0; let attempts=0;
+      this._current_generation=Math.max(p1.generation||0,p2.generation||0)+1; this._current_parents=[parent1_id,parent2_id];
+      while(offspring_data.length<num_offspring){
+        attempts++;
+        const g1=this._generate_gametes(p1.genotype); const g2=this._generate_gametes(p2.genotype);
+        const gg1=g1[Math.floor(this.rng.next()*g1.length)], gg2=g2[Math.floor(this.rng.next()*g2.length)];
+        const zyg={}; let viable=true;
+        for(const gene of this.genes){
+          const combined=[...gg1[gene], ...gg2[gene]];
+          if(combined.length!==3){ viable=false; break; }
+          zyg[gene]=combined.sort();
+        }
+        if(viable && !this._is_viable_genotype(zyg)) viable=false;
+        if(!viable){ lethal_count++; }
+        else{
+          const id=this._create_organism(zyg, `Offspring of cross ${parent1_id}×${parent2_id} #${offspring_data.length+1}`);
+          offspring_data.push({ id, phenotype:this.organisms[id].phenotype });
+        }
+        if(attempts>num_offspring*100){
+          return { success:false, message:`Tried ${attempts} times but still cannot get ${num_offspring} viable offspring, this pairing may have extremely low survival rate.` };
+        }
+      }
+      this.current_experiments += 1;
+      const rec={ experiment_id:this.current_experiments, parent1_id, parent2_id, parent1_phenotype:p1.phenotype, parent2_phenotype:p2.phenotype, requested_offspring:num_offspring, viable_offspring_data:offspring_data, lethal_count, total_fertilization_attempts:attempts, viability_rate: attempts>0? (offspring_data.length/attempts):0 };
+      this.experiment_log.push(rec);
+      return { success:true, ...rec, viable_offspring_count:offspring_data.length, lethal_offspring_count:lethal_count, viability_rate:+rec.viability_rate.toFixed(3), offspring:offspring_data, remaining_experiments:this.required_steps - this.current_experiments, total_organisms:Object.keys(this.organisms).length };
+    }
+    async query_organisms(start_id=1, end_id=null){
+      if(end_id===null) end_id=Math.max(...Object.keys(this.organisms).map(x=>+x));
+      if(start_id<1 || (end_id!==null && end_id<start_id)) return {success:false,message:'Invalid ID range'};
+      const list=[]; for(let i=start_id;i<=end_id;i++){ if(this.organisms[i]){ const o=this.organisms[i]; list.push({ id:o.id, phenotype:o.phenotype, generation:o.generation, parents:o.parents, description:o.description, viable:o.viable }); } }
+      return { success:true, message:`Found ${list.length} individuals in range ${start_id}-${end_id}`, query_range:`${start_id}-${end_id}`, organisms_found:list.length, organisms:list, total_lab_organisms:Object.keys(this.organisms).length };
+    }
+    async remove_organisms(ids){
+      if(this.committed) return {success:false,message:'Experiment submitted, cannot modify'};
+      let removed=0; ids.forEach(id=>{ if(this.organisms[id]){ delete this.organisms[id]; removed++; }});
+      return { success:true, message:`Removed ${removed} individuals`, requested_removals:ids.length, actual_removals:removed, total_lab_organisms:Object.keys(this.organisms).length };
+    }
+    async get_lab_status(){
+      return { success:true, message:'Status retrieved successfully', current_experiments:this.current_experiments, remaining_experiments:this.required_steps - this.current_experiments, can_commit:this.current_experiments>=this.required_steps, total_organisms:Object.keys(this.organisms).length, max_organisms:this.max_organisms, experiment_log_entries:this.experiment_log.length, committed:this.committed };
+    }
+    async commit_final_result(content){
+      if(this.current_experiments < this.required_steps){ return { success:false, message:`Required steps not reached yet: ${this.required_steps}, current: ${this.current_experiments}` }; }
+      if(this.committed) return {success:false,message:'Final result already submitted'};
+      this.final_result={ judge_input:content, judge_result:{ note:'Not scored online (offline evaluation)' } };
+      this.committed=true; return { success:true, result:this.final_result };
+    }
+  }
+  /******************** UI Logic ********************/
+  const ENV_NAME_LOWER = 'alien_organism_genetics_laboratory';
+  const env = new GeneticsLabEnvironment({ required_steps:50 });
+  const actionLog = []; // {timesharp, action, return, current_status}
+  // DOM shortcuts
+  const $ = (id)=>document.getElementById(id);
+  const tabs = document.querySelectorAll('[data-tab]');
+  // Render status
+  async function renderStatus(){
+    const s = await env.get_lab_status();
+    $('reqStepsVal').textContent = env.required_steps;
+    $('curStepsVal').textContent = s.current_experiments;
+    $('remainStepsVal').textContent = s.remaining_experiments;
+    $('orgCountVal').textContent = s.total_organisms;
+    $('expLogVal').textContent = s.experiment_log_entries;
+    $('canCommitVal').textContent = s.can_commit? 'Yes':'No';
+    const pct = Math.min(100, Math.round((s.current_experiments/env.required_steps)*100));
+    $('progressBar').style.width = pct + '%';
+    $('btnCommit').disabled = !s.can_commit;
+    $('btnDownload').disabled = !env.committed;
+    // Sidebar mini log
+    renderMiniLog();
+  }
+  function renderMiniLog(){
+    const cont = $('miniLog'); cont.innerHTML='';
+    const last = actionLog.slice(-12);
+    last.forEach((it)=>{
+      const line=document.createElement('div'); line.className='line mono';
+      line.textContent = `${it.timesharp} :: ${it.action}`;
+      cont.appendChild(line);
+    });
+  }
+  // Record action
+  async function record(actionStr, ret){
+    const status = await env.get_lab_status();
+    const entry = { timesharp:new Date().toISOString(), action:actionStr, return:ret, current_status:status };
+    actionLog.push(entry); renderStatus(); return entry;
+  }
+  // Initial overview cards
+  async function renderOverview(){
+    const q = await env.query_organisms(1,3);
+    const container = $('overviewOrgs'); container.innerHTML='';
+    q.organisms.forEach(o=>{
+      container.appendChild(renderOrgCard(o));
+    });
+    updateParentOptions();
+  }
+  function renderOrgCard(o){
+    const d=document.createElement('div'); d.className='org';
+    d.innerHTML = `<h4>Individual #${o.id}</h4>
+      <div class="row"><span class="badge">Generation ${o.generation}</span><span class="badge">Viable: ${o.viable?'Yes':'No'}</span></div>
+      <div class="grid cols-2" style="margin-top:8px">
+        <div><label>Body Size</label><div class="mono">${o.phenotype.body_size} (score ${o.phenotype.size_score})</div></div>
+        <div><label>Body Color</label><div class="mono">${o.phenotype.body_color} (intensity ${o.phenotype.color_intensity})</div></div>
+        <div><label>Shell Shape</label><div class="mono">${o.phenotype.shell_shape} (hardness ${o.phenotype.shell_hardness})</div></div>
+        <div><label>Parents</label><div class="mono">${o.parents? o.parents.join(' × '): '—'}</div></div>
+      </div>
+      <div style="margin-top:6px"><small class="muted">${o.description||''}</small></div>`;
+    return d;
+  }
+  function updateParentOptions(){
+    const ids = Object.keys(env.organisms).map(x=>+x).sort((a,b)=>a-b);
+    const p1=$('selP1'), p2=$('selP2');
+    [p1,p2].forEach(sel=>{ sel.innerHTML=''; ids.forEach(id=>{ const opt=document.createElement('option'); opt.value=id; opt.textContent=`#${id}`; sel.appendChild(opt); }); });
+    if(ids.length>=2){ p1.value=ids[0]; p2.value=ids[1]; }
+  }
+  // Tab switching
+  tabs.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      tabs.forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+      const tab=btn.getAttribute('data-tab');
+      document.querySelectorAll('[role="tabpanel"]').forEach(p=>p.hidden=true);
+      $('tab-'+tab).hidden=false;
+    });
+  });
+  // Event: Cross
+  $('btnCross').addEventListener('click',async()=>{
+    const p1=+$('selP1').value, p2=+$('selP2').value, n=+$('offspringCount').value;
+    const ret = await env.conduct_cross(p1,p2,n);
+    await record(`conduct_cross(parent1_id=${p1}, parent2_id=${p2}, num_offspring=${n})`, ret);
+    const box=$('crossResult');
+    if(!ret.success){ box.innerHTML = `<p class="muted">Failed: ${ret.message}</p>`; return; }
+    // Render results
+    const tableRows = ret.offspring.map(o=>`<tr><td class="mono">#${o.id}</td><td class="mono">${o.phenotype.body_size} / ${o.phenotype.size_score}</td><td class="mono">${o.phenotype.body_color} / ${o.phenotype.color_intensity}</td><td class="mono">${o.phenotype.shell_shape} / ${o.phenotype.shell_hardness}</td></tr>`).join('');
+    box.innerHTML = `
+      <div class="callout">
+        <div class="row"><div class="badge">Viable offspring produced: <b>${ret.viable_offspring_count}</b></div><div class="badge">Lethal count: <b>${ret.lethal_offspring_count}</b></div><div class="badge">Fertilization attempts: <b>${ret.total_fertilization_attempts}</b></div><div class="badge">Survival rate: <b>${(ret.viability_rate*100).toFixed(1)}%</b></div></div>
+      </div>
+      <h3 style="margin-top:8px">Offspring Phenotypes (first ${ret.offspring.length})</h3>
+      <div style="overflow:auto">
+        <table class="mono" style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="text-align:left;border-bottom:1px solid #30407a"><th>ID</th><th>Body Size/Score</th><th>Body Color/Intensity</th><th>Shell Shape/Hardness</th></tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>`;
+    updateParentOptions();
+  });
+  // Event: Status
+  $('btnStatus').addEventListener('click', async()=>{
+    const s = await env.get_lab_status();
+    await record(`get_lab_status()`, s);
+    alert(`Current steps: ${s.current_experiments} / ${env.required_steps}\nRemaining steps: ${s.remaining_experiments}\nCan submit: ${s.can_commit?'Yes':'No'}\nTotal organisms: ${s.total_organisms}`);
+  });
+  // Event: Query
+  $('btnQuery').addEventListener('click', async()=>{
+    const a=+$('qStart').value, b=+$('qEnd').value;
+    const ret = await env.query_organisms(a,b);
+    await record(`query_organisms(start_id=${a}, end_id=${b})`, ret);
+    const box=$('queryResult');
+    if(!ret.success){ box.innerHTML=`<p class="muted">Failed: ${ret.message}</p>`; return; }
+    if(ret.organisms.length===0){ box.innerHTML=`<p class="muted">No results</p>`; return; }
+    const wrap=document.createElement('div'); wrap.className='org-cards';
+    ret.organisms.forEach(o=>wrap.appendChild(renderOrgCard(o)));
+    box.innerHTML=''; box.appendChild(wrap);
+  });
+  // Event: Remove (by range)
+  $('btnRemove').addEventListener('click', async()=>{
+    const start = +$('rmStart').value;
+    const end = +$('rmEnd').value;
+    if(!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < start){
+      alert('Please enter valid start/end IDs (start≥1 and end≥start).');
+      return;
+    }
+    // Generate ID list for closed interval [start, end]
+    const ids = [];
+    for(let i = start; i <= end; i++) ids.push(i);
+    const ret = await env.remove_organisms(ids);
+    await record(`remove_organisms(range=${start}-${end})`, ret);
+    const box = $('removeResult');
+    if(!ret.success){
+      box.innerHTML = `<p class="muted">Failed: ${ret.message}</p>`;
+      return;
+    }
+    box.innerHTML = `
+      <div class="callout">
+        <div class="row">
+          <span class="badge">Range: <b>${start}-${end}</b></span>
+          <span class="badge">Requested removals: <b>${ret.requested_removals}</b></span>
+          <span class="badge">Actual removals: <b>${ret.actual_removals}</b></span>
+          <span class="badge">Current total: <b>${ret.total_lab_organisms}</b></span>
+        </div>
+      </div>
+    `;
+    updateParentOptions();
+  });
+
+  // Event: Submit
+  $('btnCommit').addEventListener('click', async()=>{
+    const text=$('finalText').value.trim(); if(!text){ alert('Please fill in the report content'); return; }
+    const ret = await env.commit_final_result(text);
+    await record(`commit_final_result(<report_length=${text.length}>)`, ret);
+    const box=$('commitResult');
+    if(!ret.success){ box.innerHTML=`<p class="muted">Submission failed: ${ret.message}</p>`; return; }
+    box.innerHTML = `<div class="callout"><b>Submission successful.</b> Result has been recorded.<br/>Please click <b>"Download Experiment Log JSON"</b> on the left to save the log file.<br/><br/><span class="mono">Please download this json file and send it to the collector.</span></div>`;
+    $('btnDownload').disabled=false;
+  });
+  // Event: Preview JSON (no download)
+  $('btnPreview').addEventListener('click',()=>{
+    const preview = { env_name:'Alien Organism Genetics Laboratory', logs:actionLog };
+    const w=window.open('','_blank','width=800,height=600');
+    w.document.write('<pre style="white-space:pre-wrap;word-break:break-word">'+
+      (JSON.stringify(preview,null,2).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])))+
+      '</pre>');
+    w.document.close();
+  });
+  // Download log JSON
+  $('btnDownload').addEventListener('click',()=>{
+    const data = { env_name:'Alien Organism Genetics Laboratory', logs:actionLog };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=ENV_NAME_LOWER+'.json'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  // Reset environment
+  $('btnReset').addEventListener('click',()=>{
+    if(!confirm('Confirm reset environment? All unsaved logs will be lost.')) return;
+    location.reload();
+  });
+  // Initialize
+  (async function init(){
+    $('fileNameHint').textContent = ENV_NAME_LOWER+'.json';
+    await renderOverview();
+    await record('get_lab_status()', await env.get_lab_status());
+    await renderStatus();
+  })();
+  </script>
+</body>
+</html>

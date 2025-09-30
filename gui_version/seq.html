@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Exploration Game - Hard Difficulty</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .status-bar {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            font-weight: bold;
+        }
+        .status-item.steps {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+        .status-item.difficulty {
+            background: linear-gradient(135deg, #a55eea, #8e44ad);
+            color: white;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 600px;
+            gap: 30px;
+            padding: 30px;
+        }
+        .game-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        .rules-section {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+        .rules-section h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .rules-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .rules-list li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        .rules-list li::before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #ffeaa7;
+        }
+        .input-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        .input-section h3 {
+            color: #2d3436;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        .sequence-input {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .input-group label {
+            font-weight: bold;
+            color: #2d3436;
+            min-width: 80px;
+        }
+        .sequence-field {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+        .sequence-field:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        .sequence-field.error {
+            border-color: #e74c3c;
+            background-color: #ffeaea;
+        }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,184,148,0.3);
+        }
+        .btn-primary:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            color: white;
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(225,112,85,0.3);
+        }
+        .btn-danger:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .error-message {
+            background: #ffeaea;
+            color: #e74c3c;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #e74c3c;
+        }
+        .success-message {
+            background: #eafaf1;
+            color: #00b894;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #00b894;
+        }
+        .history-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .history-panel h3 {
+            color: #2d3436;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+        .history-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #4facfe;
+        }
+        .history-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .step-number {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .timestamp {
+            color: #636e72;
+            font-size: 0.9em;
+        }
+        .input-display {
+            background: #f1f2f6;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+        }
+        .transformations {
+            margin-top: 15px;
+        }
+        .transformation-step {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        .step-label {
+            background: #74b9ff;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-right: 12px;
+            min-width: 80px;
+            text-align: center;
+        }
+        .step-result {
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #2d3436;
+        }
+        .final-result {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .commit-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: 25px;
+        }
+        .commit-section h3 {
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+        .commit-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+        .commit-textarea:focus {
+            outline: none;
+            border-color: #e74c3c;
+        }
+        .download-section {
+            background: linear-gradient(135deg, #fdcb6e, #e17055);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 25px;
+            text-align: center;
+        }
+        .download-section h3 {
+            margin-bottom: 15px;
+        }
+        .download-section p {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .btn-download {
+            background: white;
+            color: #e17055;
+            border: 2px solid white;
+        }
+        .btn-download:hover {
+            background: transparent;
+            color: white;
+            border-color: white;
+        }
+        .hidden {
+            display: none;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ffeaa7;
+            margin-bottom: 15px;
+        }
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Scrollbar styles */
+        .history-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        .history-panel::-webkit-scrollbar-track {
+            background: #f1f2f6;
+            border-radius: 4px;
+        }
+        .history-panel::-webkit-scrollbar-thumb {
+            background: #74b9ff;
+            border-radius: 4px;
+        }
+        .history-panel::-webkit-scrollbar-thumb:hover {
+            background: #0984e3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Sequence Exploration Game</h1>
+            <p>Discover Hidden Dual Sequence Transformation Rules - Hard Difficulty</p>
+        </div>
+        <div class="status-bar">
+            <div class="status-item difficulty">
+                <span>🎯 Difficulty: Hard</span>
+            </div>
+            <div class="status-item steps">
+                <span>📊 Steps: <span id="currentSteps">0</span> / 50</span>
+            </div>
+            <div class="status-item">
+                <span>⚡ Status: <span id="gameStatus">In Progress</span></span>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="game-panel">
+                <div class="rules-section">
+                    <h3>🎮 Game Rules</h3>
+                    <ul class="rules-list">
+                        <li>Input two sequences, each must be 5 characters, using only letters A-E</li>
+                        <li>Each sequence must contain at least 2 different letters</li>
+                        <li>The first sequence is the 'main sequence', the second is the 'vice sequence'</li>
+                        <li>The system will perform 5 fixed transformations on the sequences, rules are hidden</li>
+                        <li>You must complete 50 steps of experiments before submitting the final answer</li>
+                        <li>The goal is to discover and describe all 5 transformation rules</li>
+                    </ul>
+                </div>
+                <div class="input-section">
+                    <h3>📝 Input Sequences</h3>
+                    <div class="sequence-input">
+                        <div class="input-group">
+                            <label>Main Sequence:</label>
+                            <input type="text" id="mainSequence" class="sequence-field" 
+                                   placeholder="e.g.: ABCDE" maxlength="5">
+                        </div>
+                        <div class="input-group">
+                            <label>Vice Sequence:</label>
+                            <input type="text" id="viceSequence" class="sequence-field" 
+                                   placeholder="e.g.: EDCBA" maxlength="5">
+                        </div>
+                    </div>
+                    <button id="submitBtn" class="btn btn-primary">🚀 Submit Sequences</button>
+                    <div id="inputMessage"></div>
+                </div>
+                <div id="commitSection" class="commit-section hidden">
+                    <div class="warning">
+                        ⚠️ Note: You can only submit the final answer once! Please ensure you have fully explored and understood all transformation rules.
+                    </div>
+                    <h3>📋 Submit Final Answer</h3>
+                    <p>Please describe the specific mechanisms of the 5 transformation rules you discovered (rule_1 to rule_5):</p>
+                    <textarea id="finalAnswer" class="commit-textarea" 
+                              placeholder="Please describe the transformation mechanism of each rule in detail..."></textarea>
+                    <button id="commitBtn" class="btn btn-danger">✅ Submit Final Answer</button>
+                    <div id="commitMessage"></div>
+                </div>
+                <div id="downloadSection" class="download-section hidden">
+                    <h3>📥 Download Operation Log</h3>
+                    <p>Please download this JSON file and send it to the collector</p>
+                    <button id="downloadBtn" class="btn btn-download">💾 Download sequenceexplore.json</button>
+                </div>
+            </div>
+            <div class="history-panel">
+                <h3>📚 History</h3>
+                <div id="historyContainer">
+                    <p style="text-align: center; color: #636e72; margin-top: 50px;">
+                        🤔 No experiment records yet, start your first attempt!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Game State
+        let gameState = {
+            currentSteps: 0,
+            requiredSteps: 50,
+            history: [],
+            committed: false,
+            operationLog: []
+        };
+        // Rule Implementation - Hard Difficulty
+        const rules = {
+            rule_1: (current, main, vice, totalSteps) => {
+                if (!main || !vice) return current;
+                
+                let result = [];
+                const maxLen = Math.max(main.length, vice.length);
+                const mainFirst = (totalSteps % 2 === 1);
+                
+                for (let i = 0; i < maxLen; i++) {
+                    if (mainFirst) {
+                        if (i < main.length) result.push(main[i]);
+                        if (i < vice.length) result.push(vice[i]);
+                    } else {
+                        if (i < vice.length) result.push(vice[i]);
+                        if (i < main.length) result.push(main[i]);
+                    }
+                }
+                return result.join("");
+            },
+            rule_2: (current, main, vice, totalSteps) => {
+                if (!current) return current;
+                
+                const reversed = current.split('').reverse().join('');
+                
+                const shiftChar = (c) => {
+                    if (c >= 'A' && c <= 'E') {
+                        const idx = (c.charCodeAt(0) - 65 + totalSteps) % 26;
+                        return String.fromCharCode(65 + idx);
+                    }
+                    return c;
+                };
+                
+                const reversedShifted = reversed.split('').map(shiftChar).join('');
+                const currentShifted = current.split('').map(shiftChar).join('');
+                
+                return reversedShifted + currentShifted;
+            },
+            rule_3: (current, main, vice, totalSteps) => {
+                if (!current) return current;
+                
+                const n = totalSteps;
+                let a = n % 10;
+                if (a === 0) a = 10;
+                
+                if (current.length > a - 1) {
+                    const charToCopy = current[a - 1];
+                    return current + charToCopy.repeat(a);
+                }
+                return current;
+            },
+            rule_4: (current, main, vice, totalSteps) => {
+                const lastMain = getLastMain();
+                if (!lastMain || !current) return current;
+                
+                let result = "";
+                const currentPrefix = current.substring(0, 5);
+                
+                for (let i = 0; i < Math.min(currentPrefix.length, lastMain.length); i++) {
+                    const currentVal = currentPrefix.charCodeAt(i) - 65;
+                    const mainVal = lastMain.charCodeAt(i) - 65;
+                    const combinedVal = (currentVal + mainVal) % 26;
+                    result += String.fromCharCode(65 + combinedVal);
+                }
+                
+                if (current.length > 5) {
+                    result += current.substring(5);
+                }
+                return result;
+            },
+            rule_5: (current, main, vice, totalSteps) => {
+                if (!current) return current;
+                
+                if (isPrime(totalSteps)) {
+                    const freq = {};
+                    for (const char of current) {
+                        if (char >= 'A' && char <= 'Z') {
+                            freq[char] = (freq[char] || 0) + 1;
+                        }
+                    }
+                    
+                    if (Object.keys(freq).length === 0) return current;
+                    
+                    const mostFrequent = Object.keys(freq).reduce((a, b) => 
+                        freq[a] > freq[b] ? a : b
+                    );
+                    
+                    const nextCharIdx = (mostFrequent.charCodeAt(0) - 65 + 1) % 26;
+                    const nextChar = String.fromCharCode(65 + nextCharIdx);
+                    
+                    return current.replace(new RegExp(mostFrequent, 'g'), nextChar);
+                }
+                return current;
+            }
+        };
+        // Helper Functions
+        function isPrime(n) {
+            if (n <= 1) return false;
+            if (n === 2) return true;
+            if (n % 2 === 0) return false;
+            
+            const limit = Math.floor(Math.sqrt(n)) + 1;
+            for (let i = 3; i < limit; i += 2) {
+                if (n % i === 0) return false;
+            }
+            return true;
+        }
+        function getLastMain() {
+            if (gameState.history.length > 0) {
+                return gameState.history[gameState.history.length - 1].main_input;
+            }
+            return "";
+        }
+        function validateSequence(sequence) {
+            if (sequence.length !== 5) {
+                return `Sequence must be 5 characters, currently ${sequence.length} characters`;
+            }
+            
+            for (let i = 0; i < sequence.length; i++) {
+                const char = sequence[i];
+                if (!"ABCDE".includes(char)) {
+                    return `Character at position ${i} '${char}' is invalid, only A-E can be used`;
+                }
+            }
+            
+            const uniqueChars = new Set(sequence);
+            if (uniqueChars.size < 2) {
+                return `Sequence must contain at least 2 different letters, currently only ${uniqueChars.size} different letters`;
+            }
+            
+            return null;
+        }
+        function logOperation(action, returnValue, status = null) {
+            const operation = {
+                timestamp: new Date().toISOString(),
+                action: action,
+                return: returnValue,
+                current_status: status || {
+                    currentSteps: gameState.currentSteps,
+                    committed: gameState.committed,
+                    historyCount: gameState.history.length
+                }
+            };
+            gameState.operationLog.push(operation);
+        }
+        async function inputSequences(mainSequence, viceSequence) {
+            if (gameState.committed) {
+                return { error: "Final answer has been submitted, cannot continue input." };
+            }
+            
+            if (gameState.currentSteps >= gameState.requiredSteps) {
+                return { error: `Maximum steps (${gameState.requiredSteps}) reached, you should submit the final result.` };
+            }
+            
+            const mainError = validateSequence(mainSequence);
+            if (mainError) {
+                return { error: `Main sequence error: ${mainError}` };
+            }
+            
+            const viceError = validateSequence(viceSequence);
+            if (viceError) {
+                return { error: `Vice sequence error: ${viceError}` };
+            }
+            
+            gameState.currentSteps++;
+            
+            const transformations = [{
+                step: 0,
+                rule: "Input",
+                sequence: `Main Sequence: ${mainSequence}, Vice Sequence: ${viceSequence}`,
+                main: mainSequence,
+                vice: viceSequence
+            }];
+            
+            let currentSeq = "";
+            const originalMain = mainSequence;
+            const originalVice = viceSequence;
+            
+            const ruleNames = ["rule_1", "rule_2", "rule_3", "rule_4", "rule_5"];
+            
+            for (let i = 0; i < ruleNames.length; i++) {
+                const ruleName = ruleNames[i];
+                const ruleFunc = rules[ruleName];
+                const newSeq = ruleFunc(currentSeq, originalMain, originalVice, gameState.currentSteps);
+                
+                transformations.push({
+                    step: i + 1,
+                    rule: ruleName,
+                    sequence: newSeq
+                });
+                currentSeq = newSeq;
+            }
+            
+            const historyEntry = {
+                main_input: mainSequence,
+                vice_input: viceSequence,
+                transformations: transformations,
+                final_output: currentSeq,
+                step_number: gameState.currentSteps,
+                timestamp: new Date().toISOString()
+            };
+            
+            gameState.history.push(historyEntry);
+            
+            return {
+                success: true,
+                main_input: mainSequence,
+                vice_input: viceSequence,
+                transformations: transformations,
+                final_output: currentSeq,
+                steps_remaining: gameState.requiredSteps - gameState.currentSteps,
+                step_number: gameState.currentSteps
+            };
+        }
+        async function commitFinalResult(content) {
+            if (gameState.currentSteps < gameState.requiredSteps) {
+                return {
+                    success: false,
+                    message: `Cannot submit. Required steps: ${gameState.requiredSteps}, current steps: ${gameState.currentSteps}. Please conduct more exploration before submitting.`
+                };
+            }
+            
+            gameState.committed = true;
+            const result = {
+                judge_input: content,
+                judge_result: { message: "Answer submitted, awaiting evaluation" }
+            };
+            
+            return { success: true, result: result };
+        }
+        // UI Update Functions
+        function updateUI() {
+            document.getElementById('currentSteps').textContent = gameState.currentSteps;
+            document.getElementById('gameStatus').textContent = 
+                gameState.committed ? 'Completed' : 'In Progress';
+            
+            const commitSection = document.getElementById('commitSection');
+            if (gameState.currentSteps >= gameState.requiredSteps && !gameState.committed) {
+                commitSection.classList.remove('hidden');
+            }
+            
+            if (gameState.committed) {
+                document.getElementById('downloadSection').classList.remove('hidden');
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('commitBtn').disabled = true;
+            }
+        }
+        function displayHistoryItem(entry) {
+            const historyContainer = document.getElementById('historyContainer');
+            
+            if (historyContainer.children.length === 1 && 
+                historyContainer.children[0].tagName === 'P') {
+                historyContainer.innerHTML = '';
+            }
+            
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            
+            const timestamp = new Date(entry.timestamp).toLocaleString('en-US');
+            
+            historyItem.innerHTML = `
+                <div class="history-header">
+                    <div class="step-number">Step ${entry.step_number}</div>
+                    <div class="timestamp">${timestamp}</div>
+                </div>
+                
+                <div class="input-display">
+                    <strong>Input:</strong> Main Sequence="${entry.main_input}" | Vice Sequence="${entry.vice_input}"
+                </div>
+                
+                <div class="transformations">
+                    ${entry.transformations.map(trans => `
+                        <div class="transformation-step">
+                            <div class="step-label">${trans.rule}</div>
+                            <div class="step-result">${trans.sequence}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="final-result">
+                    🎯 Final Output: ${entry.final_output}
+                </div>
+            `;
+            
+            historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+            historyContainer.scrollTop = 0;
+        }
+        function showMessage(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="${isError ? 'error-message' : 'success-message'}">
+                    ${message}
+                </div>
+            `;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+        function downloadOperationLog() {
+            const data = JSON.stringify(gameState.operationLog, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sequenceexplore.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainInput = document.getElementById('mainSequence');
+            const viceInput = document.getElementById('viceSequence');
+            const submitBtn = document.getElementById('submitBtn');
+            const commitBtn = document.getElementById('commitBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            // Input Validation
+            function validateInput(input) {
+                const value = input.value.toUpperCase();
+                input.value = value;
+                
+                let hasError = false;
+                if (value.length > 0) {
+                    const error = validateSequence(value);
+                    if (error && value.length === 5) {
+                        input.classList.add('error');
+                        hasError = true;
+                    } else {
+                        input.classList.remove('error');
+                    }
+                }
+                return !hasError;
+            }
+            mainInput.addEventListener('input', () => validateInput(mainInput));
+            viceInput.addEventListener('input', () => validateInput(viceInput));
+            // Submit Sequences
+            submitBtn.addEventListener('click', async function() {
+                const mainSeq = mainInput.value.toUpperCase();
+                const viceSeq = viceInput.value.toUpperCase();
+                
+                if (!mainSeq || !viceSeq) {
+                    showMessage('inputMessage', 'Please input two sequences', true);
+                    return;
+                }
+                
+                const action = `input_sequences(${mainSeq}, ${viceSeq})`;
+                const result = await inputSequences(mainSeq, viceSeq);
+                
+                logOperation(action, result);
+                
+                if (result.error) {
+                    showMessage('inputMessage', result.error, true);
+                } else {
+                    showMessage('inputMessage', 'Sequences submitted successfully!');
+                    displayHistoryItem({
+                        ...result,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    mainInput.value = '';
+                    viceInput.value = '';
+                    mainInput.classList.remove('error');
+                    viceInput.classList.remove('error');
+                }
+                
+                updateUI();
+            });
+            // Submit Final Answer
+            commitBtn.addEventListener('click', async function() {
+                const finalAnswer = document.getElementById('finalAnswer').value.trim();
+                
+                if (!finalAnswer) {
+                    showMessage('commitMessage', 'Please input your final answer', true);
+                    return;
+                }
+                
+                const action = `commit_final_result("${finalAnswer}")`;
+                const result = await commitFinalResult(finalAnswer);
+                
+                logOperation(action, result);
+                
+                if (result.success) {
+                    showMessage('commitMessage', 'Final answer submitted successfully!');
+                } else {
+                    showMessage('commitMessage', result.message, true);
+                }
+                
+                updateUI();
+            });
+            // Download Operation Log
+            downloadBtn.addEventListener('click', function() {
+                const action = 'download_operation_log()';
+                logOperation(action, { success: true, message: 'Operation log downloaded' });
+                downloadOperationLog();
+            });
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    if (!gameState.committed && gameState.currentSteps < gameState.requiredSteps) {
+                        submitBtn.click();
+                    }
+                }
+            });
+            // Initialize UI
+            updateUI();
+            
+            // Log Game Start
+            logOperation('game_start()', { 
+                success: true, 
+                difficulty: 'HARD',
+                required_steps: gameState.requiredSteps 
+            });
+        });
+    </script>
+</body>
+</html>

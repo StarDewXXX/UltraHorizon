@@ -1,0 +1,6 @@
+# Global LLM configuration
+[llm]
+model = "Kimi-K2-Instruct"
+base_url = "..."
+api_key = "..."
+temperature = 0.3

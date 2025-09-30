@@ -1,0 +1,3 @@
+model: "DeepSeek-R1-0528-BF16"
+base_url: "..."
+api_key: "..."
